@@ -62,16 +62,18 @@ def get_user_id(client, slug: str):
     params = {"slug": slug}
     request = GraphQLRequest(request=GET_USER_ID_FROM_SLUG, variable_values=params)
     response = client.execute(request)
+    if not response.get("user"):
+        return None
     return response["user"]["id"]
 
 def get_user_tags(client, user_id: int, game_id: int):
     current_page = 1
     num_pages = 2
 
-    # 270 was found to be the largest possible value where complexity < 1000
+    # 250 was found to be the largest possible value where complexity < 1000
     # This could technically be increased by splitting the totalPages request into a separate query,
     # but I'm assuming, on average, most players will have < 3 pages of results
-    results_per_page = 270
+    results_per_page = 250
 
     tags = set()
     while current_page <= num_pages:
