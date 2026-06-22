@@ -300,6 +300,28 @@ def get_tournament_vod_urls(slug: str, event_ids: list[int], tournament_short: s
     print(f"{len(data)} VOD URLs found in {slug}")
     return data
 
+def convert_timestamp_to_seconds(timestamp: str):
+    units = timestamp.count(":") + 1
+    time_formats = ["%S", "%M", "%H"]
+    time_format = (":").join(reversed(time_formats[:units]))
+    time = datetime.time.strptime(timestamp, time_format)
+    delta = datetime.timedelta(hours=time.hour, minutes=time.minute, seconds=time.second)
+    return int(delta.total_seconds())
+
+def get_video_candidates(videos: list[YouTube]):
+    candidates: list[tuple[str, str]] = [] # (title, url)
+    for video in videos:
+        candidates.append((video.title, video.watch_url))
+        for line in video.description.splitlines(True):
+            match = re.match(r"^(?P<timestamp>[\d:]+)(?P<rest>.*)$", line)
+            if match:
+                timestamp_foudn = True
+                seconds = convert_timestamp_to_seconds(match.group("timestamp"))
+                url = f"{video.watch_url}?t={seconds}"
+                title = match.group("rest").strip(":- ")
+                candidates.append((title, url))
+    return candidates
+
 def process(slug: str,
             playlist_urls: list[str],
             video_urls: list[str],
@@ -310,13 +332,13 @@ def process(slug: str,
             suffix: str,
             interactive: bool,
             tournament_short: str):
-    videos: list[tuple[str, str]] = []
+    videos: list[YouTube]
     for playlist_url in playlist_urls:
         print(f"Processing {playlist_url}")
         try:
             playlist = Playlist(playlist_url)
-            playlist_videos = [(vid.title, vid.watch_url) for vid in playlist.videos]
-            videos.extend(playlist_videos)
+            playlist_videos = [(vid.title, vid.watch_url, vid.description) for vid in playlist.videos]
+            videos = playlist.videos
             print(f"{len(playlist_videos)} videos found in {playlist_url}")
         except Exception as e:
             print(f"Failed to process playlist {playlist_url}: {e}")
@@ -324,8 +346,7 @@ def process(slug: str,
 
     for video_url in video_urls:
         try:
-            video = YouTube(video_url)
-            videos.append((video.title, video.watch_url))
+            videos = [YouTube(video_url)]
         except Exception as e:
             print(f"Failed to process video {video_url}: {e}")
             sys.exit(1)
@@ -334,8 +355,9 @@ def process(slug: str,
     if len(videos) == 0:
         data.extend(get_tournament_vod_urls(slug, event_ids, tournament_short))
     else:
+        video_candidates = get_video_candidates(videos)
         data.extend(set_tournament_vod_urls(slug,
-                                            videos,
+                                            video_candidates,
                                             api_key,
                                             dry_run,
                                             event_ids,
