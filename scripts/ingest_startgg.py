@@ -332,7 +332,7 @@ def process(slug: str,
             suffix: str,
             interactive: bool,
             tournament_short: str):
-    videos: list[YouTube]
+    videos: list[YouTube] = []
     for playlist_url in playlist_urls:
         print(f"Processing {playlist_url}")
         try:
