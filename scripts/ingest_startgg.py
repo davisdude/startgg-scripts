@@ -317,7 +317,7 @@ def get_video_candidates(videos: list[YouTube]):
             if match:
                 timestamp_foudn = True
                 seconds = convert_timestamp_to_seconds(match.group("timestamp"))
-                url = f"{video.watch_url}?t={seconds}"
+                url = f"{video.watch_url}?t={seconds}s"
                 title = match.group("rest").strip(":- ")
                 candidates.append((title, url))
     return candidates
