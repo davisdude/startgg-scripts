@@ -170,8 +170,8 @@ def get_sets(event_data, frozen_stages=[], default_flag="us"):
         for i, game_data in enumerate(set_data["games"], start=1):
             game_data_strs = []
             stage_name = get_stage_name(game_data, frozen_stages)
-            entrant_1_stocks = game_data.get("entrant1P1Stocks", 0) % 100
-            entrant_2_stocks = game_data.get("entrant2P1Stocks", 0) % 100
+            entrant_1_stocks = (game_data.get("entrant1P1Stocks", 0) or 0) % 100
+            entrant_2_stocks = (game_data.get("entrant2P1Stocks", 0) or 0) % 100
             winner_value = get_winner_value(entrant_1_id, entrant_2_id, game_data["winnerId"])
 
             if entrant_1_chars:
@@ -190,6 +190,7 @@ def get_sets(event_data, frozen_stages=[], default_flag="us"):
             set_data_strs.append(game_data_str)
 
         if vod_url:
+            # TODO: Use different timestamp - this updates when set data is updated
             start_time = set_data["completedAt"]
             dt = datetime.datetime.fromtimestamp(start_time)
             # dt.day strips to avoid %d's 0 in a cross-platform way
