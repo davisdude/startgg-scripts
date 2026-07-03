@@ -45,24 +45,38 @@ id_to_character = {
     1744: "Random Character"
 }
 
+def get_seconds_from_timecode(timecode: str):
+    # timecode can be either XXhYYmZZs or just ZZ (seconds)
+    try:
+        return int(timecode)
+    except ValueError:
+        match = re.search(r"((?P<h>\d+)h)?((?P<m>\d+)m)?((?P<s>\d+)s)?", timecode)
+        h = int(hstr) if (hstr := match.group("h")) else 0
+        m = int(mstr) if (mstr := match.group("m")) else 0
+        s = int(sstr) if (sstr := match.group("s")) else 0
+        return h * 60 * 60 + m * 60 + s
+
 def get_youtube_id_from_url(url: str):
-    match = re.search(r"(youtu.be/|youtube.com/watch\?v=)(?P<id>.{11})", url)
+    match = re.search(r"(youtu.be/|youtube.com/watch\?v=)(?P<id>.{11})([?&]t=(?P<timecode>((\d+[hms]?)+)))?", url)
     if not match:
         return None
-    return match.group("id")
+    seconds = None
+    if (timecode := match.group("timecode")):
+        seconds = get_seconds_from_timecode(timecode)
+    return match.group("id"), seconds
 
 def get_vod_data(set_obj, tournament_name: str, date: str, video_url: str, tournament_short: str):
     if (len(set_obj["entrant_1_gamer_tags"]) != 1 or len(set_obj["entrant_2_gamer_tags"]) != 1):
         return None
 
-    youtube_id = get_youtube_id_from_url(video_url)
+    youtube_id, seconds = get_youtube_id_from_url(video_url)
     entrant_1_characters: list[str] = []
     for character_id in set_obj["entrant_1_character_ids"]:
         entrant_1_characters.append(id_to_character[character_id])
     entrant_2_characters: list[str] = []
     for character_id in set_obj["entrant_2_character_ids"]:
         entrant_2_characters.append(id_to_character[character_id])
-    return {
+    data = {
         "youtubeId": youtube_id,
         "date": date,
         "tournament": tournament_name,
@@ -73,6 +87,9 @@ def get_vod_data(set_obj, tournament_name: str, date: str, video_url: str, tourn
         "player2Characters": entrant_2_characters,
         "tags": [],
     }
+    if seconds is not None:
+        data["timestamp"] = seconds
+    return data
 
 def normalize(string: str):
     # normalize to compatibility characters, decompose combining characters, unicode lowercase
