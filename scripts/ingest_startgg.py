@@ -261,8 +261,8 @@ def match_videos_to_sets(videos: list[tuple[str, str]],
                             choice = input()
                             choice_int = int(choice) - 1
                             if choice_int > len(subset_matches):
-                                print("Outside range")
-                                continue
+                                print("Outside range - skipping")
+                                break
                             set_obj = subset_matches[choice_int]
                             video_url = next_video[1]
                             set_video_urls.append((set_obj, video_url))
@@ -272,7 +272,8 @@ def match_videos_to_sets(videos: list[tuple[str, str]],
                             sets.remove(set_obj)
                             break
                         except ValueError:
-                            print(f"Invalid choice '{choice}'")
+                            print(f"Invalid choice '{choice}' - skipping")
+                            break
                 break
         current_videos = next_videos
     if len(unmatched_videos) > 0:
