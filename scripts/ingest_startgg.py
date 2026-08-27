@@ -356,7 +356,7 @@ def process(slug: str,
         try:
             playlist = Playlist(playlist_url, "WEB")
             playlist_videos = [(vid.title, vid.watch_url, vid.description) for vid in playlist.videos]
-            videos = playlist.videos
+            videos.extend(playlist.videos)
             print(f"{len(playlist_videos)} videos found in {playlist_url}")
         except Exception as e:
             print(f"Failed to process playlist {playlist_url}: {e}")
@@ -364,7 +364,7 @@ def process(slug: str,
 
     for video_url in video_urls:
         try:
-            videos = [YouTube(video_url, "WEB")]
+            videos.append(YouTube(video_url, "WEB"))
         except Exception as e:
             print(f"Failed to process video {video_url}: {e}")
             sys.exit(1)
