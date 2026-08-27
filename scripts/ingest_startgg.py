@@ -355,9 +355,8 @@ def process(slug: str,
         print(f"Processing {playlist_url}")
         try:
             playlist = Playlist(playlist_url, "WEB")
-            playlist_videos = [(vid.title, vid.watch_url, vid.description) for vid in playlist.videos]
             videos.extend(playlist.videos)
-            print(f"{len(playlist_videos)} videos found in {playlist_url}")
+            print(f"{len(playlist.videos)} videos found in {playlist_url}")
         except Exception as e:
             print(f"Failed to process playlist {playlist_url}: {e}")
             sys.exit(1)
