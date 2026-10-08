@@ -287,14 +287,15 @@ def set_tournament_vod_urls(slug: str,
                             event_ids: list[int],
                             suffix: str,
                             interactive: bool,
-                            tournament_short: str):
+                            tournament_short: str,
+                            override: bool):
     print(f"Setting VOD URLs for {slug}")
     sets, name, date = get_tournament_sets_name_and_date(slug, event_ids)
     set_video_urls, data = match_videos_to_sets(videos, sets, name, date, suffix, interactive, tournament_short)
 
     requests = []
     for set_obj, video_url in set_video_urls:
-        if (set_obj["vod_url"] is None) or (get_youtube_id_from_url(set_obj["vod_url"]) != get_youtube_id_from_url(video_url)):
+        if (set_obj["vod_url"] is None) or override:
             requests.append(startgg_gql.get_set_vod_request(set_obj["id"], video_url))
     original_requests_len = len(requests)
     if dry_run:
@@ -350,7 +351,8 @@ def process(slug: str,
             event_ids: list[int],
             suffix: str,
             interactive: bool,
-            tournament_short: str):
+            tournament_short: str,
+            override: bool):
     videos: list[YouTube] = []
     for playlist_url in playlist_urls:
         print(f"Processing {playlist_url}")
@@ -381,7 +383,8 @@ def process(slug: str,
                                             event_ids,
                                             suffix,
                                             interactive,
-                                            tournament_short))
+                                            tournament_short,
+                                            override))
 
     json.dump(data, out, indent=2)
 
@@ -397,6 +400,7 @@ if __name__ == "__main__":
     parser.add_argument("--suffix", type=str, default="")
     parser.add_argument("--interactive", action="store_true")
     parser.add_argument("--tournament-short", type=str)
+    parser.add_argument("--override", action="store_true")
     args = parser.parse_args()
 
     process(**vars(args))
